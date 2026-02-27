@@ -114,7 +114,10 @@ class Article(Base):
     account = relationship("OfficialAccount", back_populates="articles")
 
 # 数据库初始化
-engine = create_engine("sqlite:///./data/wechat_spider.db", echo=False)
+import os
+db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "wechat_spider.db")
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+engine = create_engine(f"sqlite:///{db_path}", echo=False)
 SessionLocal = sessionmaker(bind=engine)
 
 def init_db():

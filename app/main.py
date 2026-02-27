@@ -26,8 +26,8 @@ app = FastAPI(title="WeChat Spider Pro", version="1.0.0")
 task_scheduler = TaskScheduler()
 
 # 静态文件和模板
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 # 首页
 @app.get("/", response_class=HTMLResponse)

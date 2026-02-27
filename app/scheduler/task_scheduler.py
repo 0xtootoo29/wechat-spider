@@ -4,9 +4,9 @@ from datetime import datetime
 import os
 import json
 
-from app.models import SessionLocal, Task, TaskLog, Article, OfficialAccount
-from app.spider.wechat_spider import WechatSpider
-from app.ai.analyzer import ArticleAnalyzer
+from models import SessionLocal, Task, TaskLog, Article, OfficialAccount
+from spider.wechat_spider import WechatSpider
+from ai.analyzer import ArticleAnalyzer
 
 class TaskScheduler:
     """任务调度器"""
