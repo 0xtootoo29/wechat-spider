@@ -15,6 +15,7 @@ import json
 from models import init_db, get_db, OfficialAccount, AccountGroup, Task, TaskLog, Article
 from spider.wechat_spider import WechatSpider
 from scheduler.task_scheduler import TaskScheduler
+from ai.analyzer import ArticleAnalyzer
 
 # 初始化数据库
 init_db()
@@ -252,6 +253,61 @@ def get_stats(db: Session = Depends(get_db)):
         "today_articles": today_articles,
         "recent_logs": recent_logs
     }
+
+# ============ AI 分析 API ============
+
+@app.post("/api/analyze/{article_id}")
+def analyze_article(article_id: str, db: Session = Depends(get_db)):
+    """分析单篇文章"""
+    article = db.query(Article).filter(Article.id == article_id).first()
+    if not article:
+        raise HTTPException(status_code=404, detail="文章不存在")
+    
+    if not article.content:
+        raise HTTPException(status_code=400, detail="文章内容为空")
+    
+    analyzer = ArticleAnalyzer()
+    result = analyzer.analyze(article.content)
+    
+    # 更新文章分析结果
+    article.ai_summary = result["summary"]
+    article.keywords = json.dumps(result["keywords"], ensure_ascii=False)
+    article.sentiment = result["sentiment"]
+    article.category = result["category"]
+    db.commit()
+    
+    return result
+
+@app.get("/api/analysis/report")
+def get_analysis_report(
+    account_id: Optional[str] = None,
+    days: int = 7,
+    db: Session = Depends(get_db)
+):
+    """获取分析报告"""
+    from_date = datetime.now() - timedelta(days=days)
+    
+    query = db.query(Article).filter(Article.fetch_time >= from_date)
+    if account_id:
+        query = query.filter(Article.account_id == account_id)
+    
+    articles = query.all()
+    
+    # 转换为字典列表
+    article_dicts = []
+    for art in articles:
+        article_dicts.append({
+            "title": art.title,
+            "category": art.category,
+            "sentiment": art.sentiment,
+            "keywords": art.keywords,
+            "publish_time": art.publish_time
+        })
+    
+    analyzer = ArticleAnalyzer()
+    report = analyzer.generate_report(article_dicts)
+    
+    return report
 
 if __name__ == "__main__":
     import uvicorn

@@ -6,6 +6,7 @@ import json
 
 from app.models import SessionLocal, Task, TaskLog, Article, OfficialAccount
 from app.spider.wechat_spider import WechatSpider
+from app.ai.analyzer import ArticleAnalyzer
 
 class TaskScheduler:
     """任务调度器"""
@@ -14,6 +15,7 @@ class TaskScheduler:
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
         self.spider = WechatSpider()
+        self.analyzer = ArticleAnalyzer()
         self._load_tasks()
     
     def _load_tasks(self):
@@ -96,8 +98,16 @@ class TaskScheduler:
                             task_id=task_id
                         )
                         
-                        db.add(article)
-                        db.commit()
+                        # AI 分析
+                        if task.ai_analysis and article.content:
+                            try:
+                                analysis = self.analyzer.analyze(article.content)
+                                article.ai_summary = analysis.get("summary")
+                                article.keywords = json.dumps(analysis.get("keywords", []), ensure_ascii=False)
+                                article.sentiment = analysis.get("sentiment")
+                                article.category = analysis.get("category")
+                            except Exception as e:
+                                print(f"AI分析失败: {e}")
                         
                         if task.storage_format == "markdown":
                             self._save_as_markdown(article, task.storage_path)
