@@ -14,11 +14,15 @@ import json
 
 from models import init_db, get_db, OfficialAccount, AccountGroup, Task, TaskLog, Article
 from spider.wechat_spider import WechatSpider
+from scheduler.task_scheduler import TaskScheduler
 
 # 初始化数据库
 init_db()
 
 app = FastAPI(title="WeChat Spider Pro", version="1.0.0")
+
+# 初始化任务调度器
+task_scheduler = TaskScheduler()
 
 # 静态文件和模板
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -136,6 +140,10 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    
+    # 添加到调度器
+    task_scheduler.add_task(db_task)
+    
     return db_task
 
 @app.get("/api/tasks", response_model=List[TaskResponse])
@@ -166,39 +174,10 @@ def run_task(task_id: str, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
     
-    # 创建执行日志
-    log = TaskLog(task_id=task_id, status="running")
-    db.add(log)
-    db.commit()
+    # 使用调度器立即执行
+    task_scheduler.run_task_now(task_id)
     
-    # 异步执行任务（简化版，实际应使用 Celery）
-    spider = WechatSpider()
-    try:
-        result = spider.fetch_account(task.account.wechat_id, task.fetch_depth)
-        log.status = "success"
-        log.articles_count = len(result.get("articles", []))
-        log.end_time = datetime.now()
-        
-        # 保存文章
-        for article_data in result.get("articles", []):
-            article = Article(
-                title=article_data["title"],
-                author=task.account.name,
-                url=article_data["url"],
-                publish_time=article_data.get("publish_time"),
-                account_id=task.account_id,
-                task_id=task_id
-            )
-            db.add(article)
-        
-        db.commit()
-        return {"message": "任务执行成功", "articles_count": log.articles_count}
-    except Exception as e:
-        log.status = "failed"
-        log.error_msg = str(e)
-        log.end_time = datetime.now()
-        db.commit()
-        raise HTTPException(status_code=500, detail=f"任务执行失败: {str(e)}")
+    return {"message": "任务已启动"}
 
 @app.delete("/api/tasks/{task_id}")
 def delete_task(task_id: str, db: Session = Depends(get_db)):
@@ -206,6 +185,10 @@ def delete_task(task_id: str, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
+    
+    # 从调度器移除
+    task_scheduler.remove_task(task_id)
+    
     db.delete(task)
     db.commit()
     return {"message": "删除成功"}
