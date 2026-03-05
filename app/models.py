@@ -110,6 +110,10 @@ class Article(Base):
     
     # 文件存储
     file_path = Column(String, nullable=True)
+    html_content = Column(Text, nullable=True)  # 原始 HTML 内容
+    markdown_content = Column(Text, nullable=True)  # Markdown 内容
+    images_dir = Column(String, nullable=True)  # 图片目录路径
+    images_count = Column(Integer, default=0)  # 图片数量
     
     account = relationship("OfficialAccount", back_populates="articles")
 
@@ -122,6 +126,38 @@ SessionLocal = sessionmaker(bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+
+
+# 认证凭证模型
+class AuthCredential(Base):
+    __tablename__ = "auth_credentials"
+
+    id = Column(String, primary_key=True, default=generate_id)
+    account_nickname = Column(String, nullable=False)  # 公众号昵称
+    cookie = Column(Text, nullable=False)  # Cookie 信息
+    token = Column(String, nullable=False)  # Token 信息
+    created_at = Column(DateTime, default=datetime.now)
+    expires_at = Column(DateTime, nullable=False)  # 过期时间
+    last_used_at = Column(DateTime, nullable=True)  # 最后使用时间
+    usage_count = Column(Integer, default=0)  # 使用次数
+    is_active = Column(Boolean, default=True)  # 是否激活
+    notes = Column(Text, nullable=True)  # 备注
+
+
+# 下载队列模型
+class DownloadQueue(Base):
+    __tablename__ = "download_queue"
+
+    id = Column(String, primary_key=True, default=generate_id)
+    article_url = Column(String, nullable=False)  # 文章 URL
+    account_nickname = Column(String, nullable=False)  # 公众号昵称
+    status = Column(String, default="pending")  # pending/downloading/completed/failed
+    retry_count = Column(Integer, default=0)  # 重试次数
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    completed_at = Column(DateTime, nullable=True)  # 完成时间
+    error_message = Column(Text, nullable=True)  # 错误信息
+
 
 def get_db():
     db = SessionLocal()

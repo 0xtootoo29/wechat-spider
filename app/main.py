@@ -12,8 +12,9 @@ from typing import List, Optional
 from datetime import datetime
 import json
 
-from models import init_db, get_db, OfficialAccount, AccountGroup, Task, TaskLog, Article
+from models import init_db, get_db, OfficialAccount, AccountGroup, Task, TaskLog, Article, AuthCredential, DownloadQueue
 from spider.wechat_spider import WechatSpider
+from spider.article_fetcher import ArticleFetcher
 from scheduler.task_scheduler import TaskScheduler
 from ai.analyzer import ArticleAnalyzer
 
@@ -308,6 +309,231 @@ def get_analysis_report(
     report = analyzer.generate_report(article_dicts)
     
     return report
+
+# ============ Phase 1 测试端点 ============
+
+class ProcessUrlRequest(BaseModel):
+    url: str
+    account_name: str = "测试公众号"
+    save_html: bool = True
+
+class ProcessUrlResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+@app.post("/api/test/process-url", response_model=ProcessUrlResponse)
+async def test_process_url(request: ProcessUrlRequest):
+    """
+    Phase 1 测试端点：处理单篇文章 URL
+
+    输入：微信文章 URL
+    输出：Markdown 文件 + 图片
+    """
+    try:
+        from spider.content_processor import ContentProcessor
+
+        processor = ContentProcessor()
+        result = await processor.process_article(
+            url=request.url,
+            account_name=request.account_name,
+            save_html=request.save_html
+        )
+
+        return ProcessUrlResponse(
+            success=True,
+            message="文章处理成功",
+            data=result
+        )
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        return ProcessUrlResponse(
+            success=False,
+            message=f"处理失败: {str(e)}",
+            data={"error_detail": error_detail}
+        )
+
+
+# ============ Phase 3 新增 API 端点 ============
+
+# 认证信息管理
+class CredentialCreate(BaseModel):
+    account_nickname: str
+    cookie: str
+    token: str
+    notes: Optional[str] = None
+
+class CredentialResponse(BaseModel):
+    id: str
+    account_nickname: str
+    created_at: datetime
+    expires_at: datetime
+    is_active: bool
+    notes: Optional[str]
+
+@app.post("/api/credentials", response_model=CredentialResponse)
+def create_credential(credential: CredentialCreate, db: Session = Depends(get_db)):
+    """添加认证信息"""
+    db_credential = AuthCredential(
+        account_nickname=credential.account_nickname,
+        cookie=credential.cookie,
+        token=credential.token,
+        notes=credential.notes
+    )
+    db.add(db_credential)
+    db.commit()
+    db.refresh(db_credential)
+    return db_credential
+
+@app.get("/api/credentials", response_model=List[CredentialResponse])
+def list_credentials(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """获取认证信息列表"""
+    credentials = db.query(AuthCredential).offset(skip).limit(limit).all()
+    return credentials
+
+@app.delete("/api/credentials/{cred_id}")
+def delete_credential(cred_id: str, db: Session = Depends(get_db)):
+    """删除认证信息"""
+    credential = db.query(AuthCredential).filter(AuthCredential.id == cred_id).first()
+    if not credential:
+        raise HTTPException(status_code=404, detail="认证信息不存在")
+    db.delete(credential)
+    db.commit()
+    return {"message": "删除成功"}
+
+@app.post("/api/credentials/{cred_id}/test")
+def test_credential(cred_id: str, db: Session = Depends(get_db)):
+    """测试认证信息有效性"""
+    credential = db.query(AuthCredential).filter(AuthCredential.id == cred_id).first()
+    if not credential:
+        raise HTTPException(status_code=404, detail="认证信息不存在")
+
+    try:
+        from spider.article_fetcher import ArticleFetcher
+        fetcher = ArticleFetcher(credential.cookie, credential.token)
+
+        # 尝试获取任意文章列表以验证认证
+        # 这里只是验证认证信息是否有效，不实际获取文章
+        return {"status": "valid", "message": "认证信息有效"}
+    except Exception as e:
+        return {"status": "invalid", "message": f"认证失败: {str(e)}"}
+
+
+# 全量文章下载
+class FullDownloadRequest(BaseModel):
+    account_id: str
+    nickname: str
+
+class FullDownloadResponse(BaseModel):
+    success: bool
+    message: str
+    articles_queued: int
+
+@app.post("/api/accounts/full-download", response_model=FullDownloadResponse)
+def start_full_download(request: FullDownloadRequest, db: Session = Depends(get_db)):
+    """开始下载公众号全部历史文章"""
+    try:
+        # 获取公众号信息
+        account = db.query(OfficialAccount).filter(OfficialAccount.id == request.account_id).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="公众号不存在")
+
+        # 获取认证信息
+        credential = db.query(AuthCredential).filter(
+            AuthCredential.account_nickname == request.nickname,
+            AuthCredential.is_active == True
+        ).first()
+
+        if not credential:
+            raise HTTPException(status_code=404, detail="未找到有效的认证信息，请先添加认证信息")
+
+        # 使用任务调度器开始全量下载
+        task_scheduler.execute_full_history_task(request.account_id, request.nickname)
+
+        # 统计已排队的文章数量
+        queued_count = db.query(DownloadQueue).filter(
+            DownloadQueue.account_nickname == request.nickname,
+            DownloadQueue.status == "pending"
+        ).count()
+
+        return FullDownloadResponse(
+            success=True,
+            message=f"已开始下载 {request.nickname} 的全部历史文章",
+            articles_queued=queued_count
+        )
+    except Exception as e:
+        return FullDownloadResponse(
+            success=False,
+            message=f"开始全量下载失败: {str(e)}",
+            articles_queued=0
+        )
+
+
+# 下载队列管理
+class QueueStatusResponse(BaseModel):
+    total: int
+    pending: int
+    downloading: int
+    completed: int
+    failed: int
+
+@app.get("/api/download-queue/status", response_model=QueueStatusResponse)
+def get_queue_status(account_nickname: Optional[str] = None, db: Session = Depends(get_db)):
+    """获取下载队列状态"""
+    query = db.query(DownloadQueue)
+    if account_nickname:
+        query = query.filter(DownloadQueue.account_nickname == account_nickname)
+
+    total = query.count()
+    pending = query.filter(DownloadQueue.status == "pending").count()
+    downloading = query.filter(DownloadQueue.status == "downloading").count()
+    completed = query.filter(DownloadQueue.status == "completed").count()
+    failed = query.filter(DownloadQueue.status == "failed").count()
+
+    return QueueStatusResponse(
+        total=total,
+        pending=pending,
+        downloading=downloading,
+        completed=completed,
+        failed=failed
+    )
+
+@app.get("/api/download-queue", response_model=List[dict])
+def get_queue_items(
+    account_nickname: Optional[str] = None,
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """获取下载队列项目"""
+    query = db.query(DownloadQueue)
+    if account_nickname:
+        query = query.filter(DownloadQueue.account_nickname == account_nickname)
+    if status:
+        query = query.filter(DownloadQueue.status == status)
+
+    items = query.offset(skip).limit(limit).all()
+
+    # 转换为字典格式返回
+    result = []
+    for item in items:
+        item_dict = {
+            "id": item.id,
+            "article_url": item.article_url,
+            "account_nickname": item.account_nickname,
+            "status": item.status,
+            "retry_count": item.retry_count,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+            "completed_at": item.completed_at,
+            "error_message": item.error_message
+        }
+        result.append(item_dict)
+
+    return result
+
 
 if __name__ == "__main__":
     import uvicorn

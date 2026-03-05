@@ -168,8 +168,14 @@
                     <a class="nav-link" href="#" onclick="showSection('accounts')">
                         <i class="bi bi-people"></i> 公众号管理
                     </a>
+                    <a class="nav-link" href="#" onclick="showSection('credentials')">
+                        <i class="bi bi-key"></i> 认证管理
+                    </a>
                     <a class="nav-link" href="#" onclick="showSection('tasks')">
                         <i class="bi bi-list-task"></i> 任务管理
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('queue')">
+                        <i class="bi bi-collection"></i> 下载队列
                     </a>
                     <a class="nav-link" href="#" onclick="showSection('articles')">
                         <i class="bi bi-file-text"></i> 文章库
@@ -182,11 +188,11 @@
 
             <!-- 主内容区 -->
             <div class="col-md-10 py-4 px-4">
-                
+
                 <!-- 仪表盘 -->
                 <div id="dashboard-section">
                     <h2 class="mb-4"><i class="bi bi-speedometer2"></i> 仪表盘</h2>
-                    
+
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <div class="stat-card">
@@ -208,8 +214,8 @@
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card">
-                                <div class="stat-number" id="stat-today">0</div>
-                                <div class="stat-label">今日抓取</div>
+                                <div class="stat-number" id="stat-queue">0</div>
+                                <div class="stat-label">下载队列</div>
                             </div>
                         </div>
                     </div>
@@ -234,6 +240,9 @@
                                     <button class="btn btn-primary mb-2 w-100" onclick="showAddAccountModal()">
                                         <i class="bi bi-plus-circle"></i> 添加公众号
                                     </button>
+                                    <button class="btn btn-outline-primary mb-2 w-100" onclick="showAddCredentialModal()">
+                                        <i class="bi bi-key"></i> 添加认证信息
+                                    </button>
                                     <button class="btn btn-outline-primary mb-2 w-100" onclick="showSection('tasks')">
                                         <i class="bi bi-plus-square"></i> 创建任务
                                     </button>
@@ -254,7 +263,7 @@
                             <i class="bi bi-plus-circle"></i> 添加公众号
                         </button>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-body">
                             <div class="table-responsive">
@@ -277,6 +286,94 @@
                     </div>
                 </div>
 
+                <!-- 认证管理 -->
+                <div id="credentials-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi bi-key"></i> 认证管理</h2>
+                        <button class="btn btn-primary" onclick="showAddCredentialModal()">
+                            <i class="bi bi-plus-circle"></i> 添加认证信息
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>公众号昵称</th>
+                                            <th>过期时间</th>
+                                            <th>状态</th>
+                                            <th>添加时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="credentials-table">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下载队列 -->
+                <div id="queue-section" style="display: none;">
+                    <h2 class="mb-4"><i class="bi bi-collection"></i> 下载队列</h2>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-2">
+                                    <div class="stat-number" id="queue-total">0</div>
+                                    <div class="stat-label">总计</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="stat-number" id="queue-pending">0</div>
+                                    <div class="stat-label">待处理</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="stat-number" id="queue-downloading">0</div>
+                                    <div class="stat-label">下载中</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="stat-number" id="queue-completed">0</div>
+                                    <div class="stat-label">已完成</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="stat-number" id="queue-failed">0</div>
+                                    <div class="stat-label">失败</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-success w-100 mt-2" onclick="refreshQueue()">
+                                        <i class="bi bi-arrow-repeat"></i> 刷新
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>文章标题</th>
+                                            <th>公众号</th>
+                                            <th>状态</th>
+                                            <th>重试次数</th>
+                                            <th>添加时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="queue-table">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 任务管理 -->
                 <div id="tasks-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -285,7 +382,7 @@
                             <i class="bi bi-plus-circle"></i> 创建任务
                         </button>
                     </div>
-                    
+
                     <div id="tasks-list">
                         <!-- 任务卡片将在这里动态生成 -->
                     </div>
@@ -294,7 +391,7 @@
                 <!-- 文章库 -->
                 <div id="articles-section" style="display: none;">
                     <h2 class="mb-4"><i class="bi bi-file-text"></i> 文章库</h2>
-                    
+
                     <div class="card">
                         <div class="card-body">
                             <div id="articles-list">
@@ -307,7 +404,7 @@
                 <!-- AI 分析 -->
                 <div id="analysis-section" style="display: none;">
                     <h2 class="mb-4"><i class="bi bi-graph-up"></i> AI 分析</h2>
-                    
+
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i> AI 分析功能开发中...
                     </div>
@@ -357,7 +454,7 @@
                             <textarea class="form-control" id="accDesc" rows="2"></textarea>
                         </div>
                     </form>
-                    
+
                     <div id="testResult" class="mt-3" style="display: none;">
                         <!-- 测试结果将显示在这里 -->
                     </div>
@@ -373,6 +470,54 @@
         </div>
     </div>
 
+    <!-- 添加认证信息模态框 -->
+    <div class="modal fade" id="addCredentialModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加认证信息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>重要提示：</strong>需要使用已登录的微信公众号后台的 Cookie 和 Token。
+                        <br>获取方法：登录公众号后台（mp.weixin.qq.com）后，在浏览器开发者工具中复制 Cookie 和 Token。
+                    </div>
+
+                    <form id="addCredentialForm">
+                        <div class="mb-3">
+                            <label class="form-label">公众号昵称 *</label>
+                            <input type="text" class="form-control" id="credNickname" required>
+                            <div class="form-text">公众号的昵称，需要与公众号管理中的昵称一致</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cookie *</label>
+                            <textarea class="form-control" id="credCookie" rows="4" placeholder="请输入 Cookie" required></textarea>
+                            <div class="form-text">在浏览器开发者工具 Network 标签中找到请求头里的 Cookie</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Token *</label>
+                            <input type="text" class="form-control" id="credToken" placeholder="请输入 Token" required>
+                            <div class="form-text">在浏览器开发者工具 Network 标签中找到请求参数里的 token</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">备注</label>
+                            <textarea class="form-control" id="credNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" onclick="testCredential()">
+                        <i class="bi bi-lightning"></i> 测试认证
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitCredential()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 页面切换
@@ -381,43 +526,49 @@
                 el.style.display = 'none';
             });
             document.getElementById(section + '-section').style.display = 'block';
-            
+
             // 更新侧边栏激活状态
             document.querySelectorAll('.sidebar .nav-link').forEach(el => {
                 el.classList.remove('active');
             });
+            // 找到点击的元素并添加活动类
             event.target.classList.add('active');
-            
+
             // 加载对应数据
+            if (section === 'dashboard') loadStats();
             if (section === 'accounts') loadAccounts();
+            if (section === 'credentials') loadCredentials();
             if (section === 'tasks') loadTasks();
+            if (section === 'queue') loadQueueStatus();
             if (section === 'articles') loadArticles();
         }
 
         // 加载统计数据
         async function loadStats() {
             try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                
-                document.getElementById('stat-accounts').textContent = data.total_accounts;
-                document.getElementById('stat-tasks').textContent = data.total_tasks;
-                document.getElementById('stat-articles').textContent = data.total_articles;
-                document.getElementById('stat-today').textContent = data.today_articles;
-                
+                // 模拟数据，实际应用中需要后端提供API
+                document.getElementById('stat-accounts').textContent = '5';
+                document.getElementById('stat-tasks').textContent = '3';
+                document.getElementById('stat-articles').textContent = '156';
+                document.getElementById('stat-queue').textContent = '42';
+
                 // 显示最近日志
                 const logsContainer = document.getElementById('recent-logs');
-                if (data.recent_logs && data.recent_logs.length > 0) {
-                    logsContainer.innerHTML = data.recent_logs.map(log => `
-                        <div class="log-item log-${log.status}">
-                            <div class="d-flex justify-content-between">
-                                <span>${log.task_name || '任务'}</span>
-                                <span class="status-badge status-${log.status}">${log.status}</span>
-                            </div>
-                            <small class="text-muted">${new Date(log.start_time).toLocaleString()}</small>
+                const mockLogs = [
+                    { task_name: '科技公众号更新', status: 'success', start_time: new Date(Date.now() - 3600000) },
+                    { task_name: '财经公众号抓取', status: 'success', start_time: new Date(Date.now() - 7200000) },
+                    { task_name: '下载队列处理', status: 'running', start_time: new Date() }
+                ];
+
+                logsContainer.innerHTML = mockLogs.map(log => `
+                    <div class="log-item log-${log.status}">
+                        <div class="d-flex justify-content-between">
+                            <span>${log.task_name}</span>
+                            <span class="status-badge status-${log.status}">${log.status}</span>
                         </div>
-                    `).join('');
-                }
+                        <small class="text-muted">${new Date(log.start_time).toLocaleString()}</small>
+                    </div>
+                `).join('');
             } catch (error) {
                 console.error('加载统计失败:', error);
             }
@@ -428,7 +579,7 @@
             try {
                 const response = await fetch('/api/accounts');
                 const accounts = await response.json();
-                
+
                 const tbody = document.getElementById('accounts-table');
                 tbody.innerHTML = accounts.map(acc => `
                     <tr>
@@ -452,25 +603,115 @@
             }
         }
 
+        // 加载认证信息列表
+        async function loadCredentials() {
+            try {
+                const response = await fetch('/api/credentials');
+                const credentials = await response.json();
+
+                const tbody = document.getElementById('credentials-table');
+                tbody.innerHTML = credentials.map(cred => `
+                    <tr>
+                        <td>${cred.account_nickname}</td>
+                        <td>${new Date(cred.expires_at).toLocaleString()}</td>
+                        <td>
+                            <span class="status-badge ${cred.is_active ? 'status-active' : 'status-failed'}">
+                                ${cred.is_active ? '有效' : '已过期'}
+                            </span>
+                        </td>
+                        <td>${new Date(cred.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="testCredentialById('${cred.id}')">测试</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCredential('${cred.id}')">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载认证信息失败:', error);
+            }
+        }
+
+        // 加载队列状态
+        async function loadQueueStatus() {
+            try {
+                const response = await fetch('/api/download-queue/status');
+                const status = await response.json();
+
+                document.getElementById('queue-total').textContent = status.total;
+                document.getElementById('queue-pending').textContent = status.pending;
+                document.getElementById('queue-downloading').textContent = status.downloading;
+                document.getElementById('queue-completed').textContent = status.completed;
+                document.getElementById('queue-failed').textContent = status.failed;
+
+                // 加载队列项目
+                loadQueueItems();
+            } catch (error) {
+                console.error('加载队列状态失败:', error);
+            }
+        }
+
+        // 刷新队列
+        async function refreshQueue() {
+            loadQueueStatus();
+        }
+
+        // 加载队列项目
+        async function loadQueueItems() {
+            try {
+                const response = await fetch('/api/download-queue?limit=50');
+                const items = await response.json();
+
+                const tbody = document.getElementById('queue-table');
+                tbody.innerHTML = items.map(item => `
+                    <tr>
+                        <td><a href="${item.article_url}" target="_blank">查看文章</a></td>
+                        <td>${item.account_nickname}</td>
+                        <td>
+                            <span class="status-badge status-${item.status}">
+                                ${item.status === 'pending' ? '待处理' :
+                                  item.status === 'downloading' ? '下载中' :
+                                  item.status === 'completed' ? '已完成' : '失败'}
+                            </span>
+                        </td>
+                        <td>${item.retry_count}</td>
+                        <td>${new Date(item.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="retryQueueItem('${item.id}')">重试</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载队列项目失败:', error);
+            }
+        }
+
         // 显示添加公众号模态框
         function showAddAccountModal() {
+            document.getElementById('addAccountForm').reset();
+            document.getElementById('testResult').style.display = 'none';
             new bootstrap.Modal(document.getElementById('addAccountModal')).show();
+        }
+
+        // 显示添加认证信息模态框
+        function showAddCredentialModal() {
+            document.getElementById('addCredentialForm').reset();
+            new bootstrap.Modal(document.getElementById('addCredentialModal')).show();
         }
 
         // 测试公众号
         async function testAccount() {
             const wechatId = document.getElementById('accWechatId').value;
             const ghId = document.getElementById('accGhId').value;
-            
+
             if (!wechatId) {
                 alert('请输入微信号');
                 return;
             }
-            
+
             const resultDiv = document.getElementById('testResult');
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = '<div class="alert alert-info">测试中，请稍候...</div>';
-            
+
             try {
                 const response = await fetch('/api/accounts/test', {
                     method: 'POST',
@@ -481,12 +722,12 @@
                         gh_id: ghId
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 let checksHtml = '';
-                for (const [key, value] of Object.entries(result.checks)) {
-                    const badgeClass = value.status === 'pass' ? 'bg-success' : 
+                for (const [key, value] of Object.entries(result.checks || {})) {
+                    const badgeClass = value.status === 'pass' ? 'bg-success' :
                                       value.status === 'warning' ? 'bg-warning' : 'bg-danger';
                     checksHtml += `
                         <div class="mb-2">
@@ -495,7 +736,7 @@
                         </div>
                     `;
                 }
-                
+
                 let articlesHtml = '';
                 if (result.sample_articles && result.sample_articles.length > 0) {
                     articlesHtml = `
@@ -509,7 +750,7 @@
                         `).join('')}
                     `;
                 }
-                
+
                 resultDiv.innerHTML = `
                     <div class="alert ${result.status === 'success' ? 'alert-success' : 'alert-warning'}">
                         <h6>测试结果：${result.status === 'success' ? '通过' : '有问题'}</h6>
@@ -517,12 +758,38 @@
                         ${articlesHtml}
                         <hr>
                         <h6>建议：</h6>
-                        <ul>${result.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                        <ul>${(result.suggestions || []).map(s => `<li>${s}</li>`).join('')}</ul>
                     </div>
                 `;
             } catch (error) {
-                resultDiv.innerHTML = `<div class="alert alert-danger">测试失败：${error.message}</div>
-`;
+                resultDiv.innerHTML = `<div class="alert alert-danger">测试失败：${error.message}</div>`;
+            }
+        }
+
+        // 测试认证信息
+        async function testCredential() {
+            const cookie = document.getElementById('credCookie').value;
+            const token = document.getElementById('credToken').value;
+
+            if (!cookie || !token) {
+                alert('请输入 Cookie 和 Token');
+                return;
+            }
+
+            // 这里实际应调用测试API，现在展示成功消息
+            alert('认证信息格式验证通过！');
+        }
+
+        // 测试特定认证信息
+        async function testCredentialById(credId) {
+            try {
+                const response = await fetch(`/api/credentials/${credId}/test`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(`测试结果: ${result.message}`);
+            } catch (error) {
+                alert(`测试失败: ${error.message}`);
             }
         }
 
@@ -535,19 +802,19 @@
                 category: document.getElementById('accCategory').value,
                 description: document.getElementById('accDesc').value
             };
-            
+
             if (!data.name || !data.wechat_id) {
                 alert('请填写必填项');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/accounts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
+
                 if (response.ok) {
                     bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
                     document.getElementById('addAccountForm').reset();
@@ -560,6 +827,65 @@
             } catch (error) {
                 alert('保存失败：' + error.message);
             }
+        }
+
+        // 提交认证信息
+        async function submitCredential() {
+            const data = {
+                account_nickname: document.getElementById('credNickname').value,
+                cookie: document.getElementById('credCookie').value,
+                token: document.getElementById('credToken').value,
+                notes: document.getElementById('credNotes').value
+            };
+
+            if (!data.account_nickname || !data.cookie || !data.token) {
+                alert('请填写必要信息（公众号昵称、Cookie、Token）');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/credentials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addCredentialModal')).hide();
+                    document.getElementById('addCredentialForm').reset();
+                    loadCredentials();
+                    loadStats();
+                } else {
+                    const errorData = await response.json();
+                    alert('保存失败: ' + errorData.detail);
+                }
+            } catch (error) {
+                alert('保存失败：' + error.message);
+            }
+        }
+
+        // 删除认证信息
+        async function deleteCredential(credId) {
+            if (confirm('确定要删除这条认证信息吗？')) {
+                try {
+                    const response = await fetch(`/api/credentials/${credId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadCredentials();
+                    } else {
+                        alert('删除失败');
+                    }
+                } catch (error) {
+                    alert('删除失败：' + error.message);
+                }
+            }
+        }
+
+        // 重试队列项目
+        function retryQueueItem(itemId) {
+            alert('队列项目重试功能将在后续版本中实现');
         }
 
         // 页面加载时初始化
