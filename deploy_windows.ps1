@@ -52,4 +52,4 @@ Write-Host "配置防火墙..." -ForegroundColor Green
 New-NetFirewallRule -DisplayName "WeChatSpider" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow
 
 Write-Host "部署完成！" -ForegroundColor Green
-Write-Host "公网访问: http://49.235.162.179:8000" -ForegroundColor Yellow
+Write-Host "公网访问: http://你的服务器IP:8000" -ForegroundColor Yellow
