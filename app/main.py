@@ -21,7 +21,7 @@ from ai.analyzer import ArticleAnalyzer
 # 初始化数据库
 init_db()
 
-app = FastAPI(title="WeChat Spider Pro", version="1.0.0")
+app = FastAPI(title="WeChat Article Downloader", version="1.0.0")
 
 # 初始化任务调度器
 task_scheduler = TaskScheduler()

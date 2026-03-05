@@ -1,4 +1,4 @@
-# WeChat Spider Pro - Windows 部署脚本
+# WeChat Article Downloader - Windows 部署脚本
 # 保存为 deploy.ps1 在服务器上运行
 
 # 1. 安装 Python
@@ -13,7 +13,7 @@ if (-not $pythonPath) {
 }
 
 # 2. 创建目录
-$appDir = "C:\WeChatSpider"
+$appDir = "C:\WeChatArticleDownloader"
 New-Item -ItemType Directory -Force -Path $appDir
 Set-Location $appDir
 
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 # 5. 创建 Windows 服务
 Write-Host "创建 Windows 服务..." -ForegroundColor Green
-$serviceName = "WeChatSpider"
+$serviceName = "WeChatArticleDownloader"
 $pythonPath = (Get-Command python).Source
 $scriptPath = "$appDir\app\main.py"
 
@@ -38,7 +38,7 @@ if (-not (Test-Path "C:\nssm\nssm.exe")) {
 }
 
 C:\nssm\nssm.exe install $serviceName $pythonPath $scriptPath
-C:\nssm\nssm.exe set $serviceName DisplayName "WeChat Spider Pro"
+C:\nssm\nssm.exe set $serviceName DisplayName "WeChat Article Downloader"
 C:\nssm\nssm.exe set $serviceName Description "微信公众号自动抓取服务"
 C:\nssm\nssm.exe set $serviceName Start SERVICE_AUTO_START
 
@@ -49,7 +49,7 @@ Write-Host "访问地址: http://localhost:8000" -ForegroundColor Cyan
 
 # 7. 配置防火墙
 Write-Host "配置防火墙..." -ForegroundColor Green
-New-NetFirewallRule -DisplayName "WeChatSpider" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow
+New-NetFirewallRule -DisplayName "WeChatArticleDownloader" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow
 
 Write-Host "部署完成！" -ForegroundColor Green
 Write-Host "公网访问: http://你的服务器IP:8000" -ForegroundColor Yellow

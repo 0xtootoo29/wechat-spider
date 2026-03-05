@@ -27,8 +27,8 @@ ssh username@your-server-ip
 cd ~/apps  # 或你选择的目录
 
 # 克隆项目
-git clone https://github.com/yourusername/wechat-spider.git
-cd wechat-spider
+git clone https://github.com/yourusername/wechat-article-downloader.git
+cd wechat-article-downloader
 ```
 
 ### 2. 构建 Docker 镜像
@@ -46,7 +46,7 @@ docker-compose build
 docker-compose up -d
 
 # 初始化数据库表
-docker exec -it wechat-spider-pro python init_db.py
+docker exec -it wechat-article-downloader-pro python init_db.py
 
 # 检查服务状态
 docker-compose ps
@@ -95,10 +95,10 @@ docker-compose ps
 docker-compose ps
 
 # 查看日志
-docker-compose logs -f wechat-spider
+docker-compose logs -f wechat-article-downloader
 
 # 查看资源使用情况
-docker stats wechat-spider-pro
+docker stats wechat-article-downloader-pro
 ```
 
 ### 2. 日志管理
@@ -112,7 +112,7 @@ docker stats wechat-spider-pro
 tar -czf backup-$(date +%Y%m%d).tar.gz ./data/
 
 # 定期备份脚本（添加到 crontab）
-0 2 * * * cd /path/to/wechat-spider && tar -czf backup-$(date +%Y%m%d).tar.gz ./data/
+0 2 * * * cd /path/to/wechat-article-downloader && tar -czf backup-$(date +%Y%m%d).tar.gz ./data/
 ```
 
 ### 4. 定期维护

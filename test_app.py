@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WeChat Spider Pro - 应用测试脚本
+WeChat Article Downloader - 应用测试脚本
 """
 
 import requests
@@ -35,7 +35,7 @@ def test_api(endpoint, method="GET", data=None):
 def run_tests():
     """运行所有测试"""
     print("=" * 60)
-    print("WeChat Spider Pro - 应用测试")
+    print("WeChat Article Downloader - 应用测试")
     print("=" * 60)
     
     tests_passed = 0

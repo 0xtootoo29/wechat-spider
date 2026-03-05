@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  wechat-spider:
+  wechat-article-downloader:
     build: .
-    container_name: wechat-spider
+    container_name: wechat-article-downloader
     ports:
       - "8000:8000"
     volumes:

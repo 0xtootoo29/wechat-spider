@@ -1,6 +1,6 @@
-# WeChat Spider Pro 🕷️
+# WeChat Article Downloader 📥
 
-微信公众号自动抓取与 AI 智能分析工具
+微信公众号历史文章下载工具
 
 ## ✨ 功能特性
 
@@ -32,7 +32,7 @@
 
 ### 1. 安装依赖
 ```bash
-cd wechat-spider
+cd wechat-article-downloader
 pip install -r requirements.txt --break-system-packages
 ```
 
@@ -52,7 +52,7 @@ python test_app.py
 
 ## 📁 项目结构
 ```
-wechat-spider/
+wechat-article-downloader/
 ├── app/
 │   ├── main.py              # FastAPI 主应用
 │   ├── models.py            # 数据库模型
@@ -122,7 +122,7 @@ wechat-spider/
 
 ## 🔗 相关链接
 
-- **代码仓库**: https://github.com/daviddeng1980/wechat-spider
+- **代码仓库**: https://github.com/0xtootoo29/wechat-article-downloader
 - **问题反馈**: 在 GitHub Issues 提交
 
 ## 📄 License
